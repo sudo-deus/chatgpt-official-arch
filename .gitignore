@@ -1,0 +1,15 @@
+# Downloaded upstream binary packages
+/*.deb
+
+# Built pacman packages and signatures
+/*.pkg.tar.*
+
+# makepkg working trees
+/src/
+/pkg/
+
+# Manual extraction/testing artifacts
+/deb-unpack/
+
+# Local logs
+/*.log
