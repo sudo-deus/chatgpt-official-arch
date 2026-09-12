@@ -1,0 +1,96 @@
+name: Check upstream release
+
+on:
+  schedule:
+    - cron: '17 11 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compare package metadata
+        id: upstream
+        shell: bash
+        run: |
+          set +e
+          output="$(scripts/check-upstream.sh)"
+          status=$?
+          set -e
+          printf '%s\n' "$output"
+          if [[ "$status" -ne 0 && "$status" -ne 10 ]]; then
+            exit "$status"
+          fi
+          while IFS='=' read -r key value; do
+            printf '%s=%s\n' "$key" "$value" >> "$GITHUB_OUTPUT"
+          done <<< "$output"
+      - name: Open or update the release issue
+        if: steps.upstream.outputs.status == 'outdated'
+        uses: actions/github-script@v7
+        env:
+          PACKAGED_VERSION: ${{ steps.upstream.outputs.packaged_version }}
+          UPSTREAM_VERSION: ${{ steps.upstream.outputs.upstream_version }}
+          UPSTREAM_FILENAME: ${{ steps.upstream.outputs.upstream_filename }}
+          UPSTREAM_SHA256: ${{ steps.upstream.outputs.upstream_sha256 }}
+        with:
+          script: |
+            const title = '[upstream] ChatGPT update available';
+            const body = [
+              'The official OpenAI Debian package index reports a newer or changed x86-64 package.',
+              '',
+              `- Packaged version: \`${process.env.PACKAGED_VERSION}\``,
+              `- Upstream version: \`${process.env.UPSTREAM_VERSION}\``,
+              `- Filename: \`${process.env.UPSTREAM_FILENAME}\``,
+              `- SHA-256: \`${process.env.UPSTREAM_SHA256}\``,
+              '',
+              'Follow `MAINTAINING.md`; this workflow intentionally does not edit or publish anything.'
+            ].join('\n');
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              per_page: 100
+            });
+            const existing = issues.find(issue => !issue.pull_request && issue.title === title);
+            if (existing) {
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existing.number,
+                body
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body
+              });
+            }
+      - name: Close a resolved release issue
+        if: steps.upstream.outputs.status == 'current'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = '[upstream] ChatGPT update available';
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              per_page: 100
+            });
+            const existing = issues.find(issue => !issue.pull_request && issue.title === title);
+            if (existing) {
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existing.number,
+                state: 'closed',
+                state_reason: 'completed'
+              });
+            }

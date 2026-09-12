@@ -1,0 +1,28 @@
+name: Validate packaging
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    container: archlinux:base-devel
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare unprivileged builder
+        run: |
+          useradd --create-home builder
+          chown -R builder:builder "$GITHUB_WORKSPACE"
+      - name: Validate scripts and updater behavior
+        run: |
+          bash -n PKGBUILD scripts/*.sh tests/*.sh
+          tests/test-check-upstream.sh
+      - name: Verify .SRCINFO
+        run: |
+          runuser -u builder -- makepkg --printsrcinfo > .SRCINFO.generated
+          diff -u .SRCINFO .SRCINFO.generated

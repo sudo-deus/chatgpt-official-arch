@@ -1,10 +1,10 @@
 pkgbase = chatgpt-official-bin
 	pkgdesc = Official ChatGPT desktop app for Linux, repackaged for Arch/Artix
-	pkgver = 26.901.51231
+	pkgver = 26.908.40834
 	pkgrel = 1
 	url = https://developers.openai.com/codex/app
 	arch = x86_64
-	license = custom
+	license = unknown
 	depends = alsa-lib
 	depends = at-spi2-core
 	depends = cairo
@@ -39,12 +39,12 @@ pkgbase = chatgpt-official-bin
 	depends = xdg-utils
 	depends = xz
 	optdepends = git: Codex Git/repository workflows
-	provides = chatgpt=26.901.51231
+	provides = chatgpt=26.908.40834
 	conflicts = chatgpt
-	noextract = chatgpt_26.901.51231_amd64.deb
+	noextract = chatgpt_26.908.40834_amd64.deb
 	options = !strip
 	options = !debug
-	source_x86_64 = chatgpt_26.901.51231_amd64.deb::https://persistent.oaistatic.com/codex-app-prod/linux/deb/pool/main/c/chatgpt/chatgpt_26.901.51231_amd64.deb
-	sha256sums_x86_64 = 62580188d87c3d3a9369dab7c73b42a8a32518d4df8a2d5bae6466ddeac5c05e
+	source_x86_64 = chatgpt_26.908.40834_amd64.deb::https://persistent.oaistatic.com/codex-app-prod/linux/deb/pool/main/c/chatgpt/chatgpt_26.908.40834_amd64.deb
+	sha256sums_x86_64 = da37b8e7bcefaaea019c478cacbe6c73ee1ddd15e0e1ebb3c7ef0a42dd818ac2
 
 pkgname = chatgpt-official-bin
