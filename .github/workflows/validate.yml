@@ -1,28 +1,47 @@
+# SPDX-License-Identifier: 0BSD
 name: Validate packaging
-
 on:
   push:
   pull_request:
   workflow_dispatch:
-
 permissions:
   contents: read
-
 jobs:
   validate:
     runs-on: ubuntu-latest
     container: archlinux:base-devel
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
       - name: Prepare unprivileged builder
         run: |
+          pacman -Syu --noconfirm --needed python namcap git curl zstd sudo
           useradd --create-home builder
+          echo "builder ALL=(root) NOPASSWD: /usr/bin/pacman" > /etc/sudoers.d/builder
+          chmod 440 /etc/sudoers.d/builder
           chown -R builder:builder "$GITHUB_WORKSPACE"
-      - name: Validate scripts and updater behavior
+      - name: Fast validation
+        run: runuser -u builder -- scripts/validate.sh
+      - name: Determine full validation scope
+        id: scope
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
-          bash -n PKGBUILD scripts/*.sh tests/*.sh
-          tests/test-check-upstream.sh
-      - name: Verify .SRCINFO
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import os, subprocess
+          full = os.environ['EVENT'] == 'workflow_dispatch'
+          base = os.environ['BASE_SHA']
+          if os.environ['EVENT'] == 'pull_request':
+              paths = subprocess.check_output(['runuser','-u','builder','--','git','diff','--name-only',base,'HEAD'],text=True).splitlines()
+              full = any(p in ('PKGBUILD','.SRCINFO','upstream.py','upstream-depends.txt','upstream-layout.json') or p.startswith(('scripts/','tests/','.github/workflows/')) for p in paths)
+          print('full='+str(full).lower())
+          PY
+      - name: Full package validation
+        if: steps.scope.outputs.full == 'true'
         run: |
-          runuser -u builder -- makepkg --printsrcinfo > .SRCINFO.generated
-          diff -u .SRCINFO .SRCINFO.generated
+          pacman -S --noconfirm --needed vulkan-swrast
+          runuser -u builder -- makepkg --syncdeps --noconfirm --verifysource --force
+          runuser -u builder -- scripts/validate.sh --full

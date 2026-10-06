@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: 0BSD
+# Maintainer: sudo-deus
 
 pkgname=chatgpt-official-bin
-pkgver=26.908.40834
-pkgrel=1
+pkgver=26.930.61225
+pkgrel=2
 pkgdesc="Official ChatGPT desktop app for Linux, repackaged for Arch/Artix"
 arch=('x86_64')
 url='https://developers.openai.com/codex/app'
@@ -41,16 +42,21 @@ depends=(
     'libxrandr'
     'mesa'              # Debian libgbm1
     'nspr'
+    'openssl'           # Debian libssl3
     'nss'
     'pango'
+    'tpm2-tss'          # Debian libtss2-*
     'vulkan-driver'     # Debian mesa-vulkan-drivers | vulkan-icd
     'vulkan-icd-loader'
     'xdg-utils'
     'xz'
 )
 
+makedepends=('python' 'curl')
+
 optdepends=(
     'git: Codex Git/repository workflows'
+    'python: bundled optional helper scripts'
 )
 
 _deb="chatgpt_${pkgver}_amd64.deb"
@@ -60,10 +66,20 @@ source_x86_64=(
     "${_deb}::${_upstream_base}/${_deb}"
 )
 
+source=(
+    'upstream.py'
+    'upstream-depends.txt'
+    'upstream-layout.json'
+)
+sha256sums=(
+    '94b77e970c265538520cd45da34da768bb350336abd88684b82f467a918a5655'
+    '56b635089fe2c09131910030f7a1f7bb6caf77d5672f0ff0fadddd7edfb62e1b'
+    '956e33c31ead6961bf564ea9043acc79c4502d21046a626a8ea62f58d91fda1e'
+)
 noextract=("${_deb}")
 
 sha256sums_x86_64=(
-    'da37b8e7bcefaaea019c478cacbe6c73ee1ddd15e0e1ebb3c7ef0a42dd818ac2'
+    'b90a80f9353bc12a5a5b8469502a8e5794a3c54a371c8880e094d500de695bb8'
 )
 
 # Preserve OpenAI's prebuilt binaries exactly.
@@ -71,98 +87,10 @@ options=('!strip' '!debug')
 
 package() {
     local work="$srcdir/deb-unpack"
-    local control="$work/control"
-    local data="$work/data"
-    local control_archive
-    local data_archive
-    local field
-
     rm -rf "$work"
-    mkdir -p "$work"
-
-    bsdtar -xf "$srcdir/$_deb" -C "$work"
-
-    control_archive="$(
-        find "$work" -maxdepth 1 -type f -name 'control.tar.*' -print -quit
-    )"
-
-    data_archive="$(
-        find "$work" -maxdepth 1 -type f -name 'data.tar.*' -print -quit
-    )"
-
-    if [[ -z "$control_archive" ]]; then
-        printf 'Unable to locate control.tar.* inside %s\n' "$_deb" >&2
-        return 1
-    fi
-
-    if [[ -z "$data_archive" ]]; then
-        printf 'Unable to locate data.tar.* inside %s\n' "$_deb" >&2
-        return 1
-    fi
-
-    mkdir -p "$control"
-    bsdtar -xf "$control_archive" -C "$control"
-
-    [[ -f "$control/control" ]] || {
-        printf 'Expected Debian control metadata is missing\n' >&2
-        return 1
-    }
-
-    field="$(sed -n 's/^Package: //p' "$control/control")"
-    [[ "$field" == 'chatgpt' ]] || {
-        printf 'Unexpected Debian package name: %s\n' "$field" >&2
-        return 1
-    }
-
-    field="$(sed -n 's/^Version: //p' "$control/control")"
-    [[ "$field" == "$pkgver" ]] || {
-        printf 'Debian version %s does not match pkgver %s\n' "$field" "$pkgver" >&2
-        return 1
-    }
-
-    field="$(sed -n 's/^Architecture: //p' "$control/control")"
-    [[ "$field" == 'amd64' ]] || {
-        printf 'Unexpected Debian architecture: %s\n' "$field" >&2
-        return 1
-    }
-
-    mkdir -p "$data"
-    bsdtar -xf "$data_archive" -C "$data"
-
-    [[ -x "$data/usr/lib/chatgpt/ChatGPT" ]] || {
-        printf 'Expected ChatGPT executable is missing\n' >&2
-        return 1
-    }
-
-    [[ -L "$data/usr/bin/chatgpt" ]] \
-        && [[ "$(readlink "$data/usr/bin/chatgpt")" == '../lib/chatgpt/codex-launcher' ]] || {
-        printf 'Expected /usr/bin/chatgpt launcher symlink is missing or changed\n' >&2
-        return 1
-    }
-
-    [[ -x "$data/usr/lib/chatgpt/codex-launcher" ]] || {
-        printf 'Expected codex-launcher is missing\n' >&2
-        return 1
-    }
-
-    [[ -f "$data/usr/share/applications/chatgpt.desktop" ]] \
-        && grep -qx 'Exec=chatgpt %U' "$data/usr/share/applications/chatgpt.desktop" \
-        && grep -qx 'Icon=chatgpt' "$data/usr/share/applications/chatgpt.desktop" || {
-        printf 'Expected ChatGPT desktop entry is missing or changed\n' >&2
-        return 1
-    }
-
-    [[ -f "$data/usr/share/pixmaps/chatgpt.png" ]] || {
-        printf 'Expected ChatGPT icon is missing\n' >&2
-        return 1
-    }
-
-    if find "$data/usr/lib/chatgpt" \
-        \( -type f -o -type d \) \
-        \( -perm /6000 -o -perm /0002 \) -print -quit | grep -q .; then
-        printf 'Refusing payload containing set-id or world-writable paths\n' >&2
-        return 1
-    fi
+    python3 "$srcdir/upstream.py" deb "$srcdir/$_deb" "$pkgver" \
+        "$srcdir/upstream-depends.txt" "$srcdir/upstream-layout.json" "$work/data" || return 1
+    local data="$work/data"
 
     install -d \
         "$pkgdir/usr/bin" \

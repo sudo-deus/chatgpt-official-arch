@@ -17,3 +17,11 @@
 # Local rollback material
 /backups/
 /*.bak
+
+# Local validation output and Python caches
+/.SRCINFO.generated
+/report.json
+/validated-update/
+/.updater-*/
+__pycache__/
+*.pyc

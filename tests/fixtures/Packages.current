@@ -3,3 +3,4 @@ Version: 26.908.40834
 Architecture: amd64
 Filename: pool/main/c/chatgpt/chatgpt_26.908.40834_amd64.deb
 SHA256: da37b8e7bcefaaea019c478cacbe6c73ee1ddd15e0e1ebb3c7ef0a42dd818ac2
+Depends: libc6 (>= 2.30), libgtk-3-0 | libgtk-3-0t64
