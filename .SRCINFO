@@ -1,10 +1,12 @@
 pkgbase = chatgpt-official-bin
 	pkgdesc = Official ChatGPT desktop app for Linux, repackaged for Arch/Artix
-	pkgver = 26.908.40834
-	pkgrel = 1
+	pkgver = 26.930.61225
+	pkgrel = 2
 	url = https://developers.openai.com/codex/app
 	arch = x86_64
 	license = unknown
+	makedepends = python
+	makedepends = curl
 	depends = alsa-lib
 	depends = at-spi2-core
 	depends = cairo
@@ -32,19 +34,28 @@ pkgbase = chatgpt-official-bin
 	depends = libxrandr
 	depends = mesa
 	depends = nspr
+	depends = openssl
 	depends = nss
 	depends = pango
+	depends = tpm2-tss
 	depends = vulkan-driver
 	depends = vulkan-icd-loader
 	depends = xdg-utils
 	depends = xz
 	optdepends = git: Codex Git/repository workflows
-	provides = chatgpt=26.908.40834
+	optdepends = python: bundled optional helper scripts
+	provides = chatgpt=26.930.61225
 	conflicts = chatgpt
-	noextract = chatgpt_26.908.40834_amd64.deb
+	noextract = chatgpt_26.930.61225_amd64.deb
 	options = !strip
 	options = !debug
-	source_x86_64 = chatgpt_26.908.40834_amd64.deb::https://persistent.oaistatic.com/codex-app-prod/linux/deb/pool/main/c/chatgpt/chatgpt_26.908.40834_amd64.deb
-	sha256sums_x86_64 = da37b8e7bcefaaea019c478cacbe6c73ee1ddd15e0e1ebb3c7ef0a42dd818ac2
+	source = upstream.py
+	source = upstream-depends.txt
+	source = upstream-layout.json
+	sha256sums = 94b77e970c265538520cd45da34da768bb350336abd88684b82f467a918a5655
+	sha256sums = 56b635089fe2c09131910030f7a1f7bb6caf77d5672f0ff0fadddd7edfb62e1b
+	sha256sums = 956e33c31ead6961bf564ea9043acc79c4502d21046a626a8ea62f58d91fda1e
+	source_x86_64 = chatgpt_26.930.61225_amd64.deb::https://persistent.oaistatic.com/codex-app-prod/linux/deb/pool/main/c/chatgpt/chatgpt_26.930.61225_amd64.deb
+	sha256sums_x86_64 = b90a80f9353bc12a5a5b8469502a8e5794a3c54a371c8880e094d500de695bb8
 
 pkgname = chatgpt-official-bin

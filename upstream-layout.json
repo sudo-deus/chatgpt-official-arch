@@ -1,0 +1,23 @@
+{
+  "external": {
+    "etc/apparmor.d/chatgpt": "file",
+    "usr/bin/chatgpt": "symlink",
+    "usr/share/applications/chatgpt.desktop": "file",
+    "usr/share/doc/chatgpt/copyright": "file",
+    "usr/share/lintian/overrides/chatgpt": "file",
+    "usr/share/metainfo/com.openai.chatgpt.metainfo.xml": "file",
+    "usr/share/pixmaps/chatgpt.png": "file",
+    "usr/share/swcatalog/xml/com.openai.chatgpt.xml": "file"
+  },
+  "required_app_files": [
+    "ChatGPT",
+    "codex-launcher",
+    "LICENSES.chromium.html"
+  ],
+  "desktop": {
+    "Exec": "chatgpt %U",
+    "Icon": "chatgpt",
+    "Type": "Application",
+    "MimeType": "x-scheme-handler/codex;x-scheme-handler/http;x-scheme-handler/https;text/csv;application/vnd.openxmlformats-officedocument.wordprocessingml.document;application/vnd.openxmlformats-officedocument.presentationml.presentation;text/tab-separated-values;application/vnd.ms-excel;application/vnd.ms-excel.sheet.macroEnabled.12;application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;"
+  }
+}
