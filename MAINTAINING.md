@@ -102,9 +102,11 @@ The updater is idempotent and regenerates `.SRCINFO` through
 `makepkg --printsrcinfo`. Tests use isolated fixtures rather than the live recipe
 version. Never hand-edit `.SRCINFO`.
 
-`upstream-depends.txt` records reviewed Debian `Depends`. Whitespace
-and continuation lines are normalized, preserving alternatives and version
-constraints. The index and downloaded control metadata must both match. The
+`upstream-depends.txt` records reviewed Debian `Depends`. Whitespace,
+continuation lines, comma-separated clause order, and exact duplicate clauses
+are normalized. Alternative order and every version constraint are preserved:
+new/removed requirements, changed alternatives, and changed bounds still fail.
+The index and downloaded control metadata must both match. The
 updater cannot modify this baseline or the Arch dependency array.
 
 The Arch mapping uses `glibc` for libc6; `gtk3`, `glib2`, `at-spi2-core`, and

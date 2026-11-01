@@ -80,6 +80,23 @@ class MetadataTests(unittest.TestCase):
         text=stanza(Depends='libc6 ( >= 2.30 ),\n libgtk-3-0|libgtk-3-0t64')
         self.assertEqual(self.discover(text)['depends'],DEPS)
         with self.assertRaisesRegex(u.Invalid,'duplicate'): self.discover(stanza().replace('Version:', 'Version: 1.2.3\nVersion:'))
+    def test_dependency_clause_order_and_exact_duplicates_are_equivalent(self):
+        reordered='libgtk-3-0 | libgtk-3-0t64, libc6 (>= 2.30), libc6 (>= 2.30)'
+        self.assertEqual(self.discover(stanza(Depends=reordered))['status'],'current')
+        self.assertEqual(self.discover(stanza()+stanza(Depends=reordered))['depends'],DEPS)
+    def test_changed_dependency_requirements_still_fail(self):
+        for depends in (
+            DEPS+', libnotify4',                         # new requirement
+            'libc6 (>= 2.30)',                           # removed requirement
+            DEPS.replace('2.30','2.31'),                 # changed minimum
+            DEPS.replace('>=','>>'),                    # changed constraint
+            DEPS.replace(' | libgtk-3-0t64',''),          # now mandatory provider
+            DEPS.replace('libgtk-3-0 | libgtk-3-0t64',
+                         'libgtk-3-0t64 | libgtk-3-0'),  # changed preference
+            DEPS+', libc6 (>= 2.31)',                    # distinct constraints retained
+        ):
+            with self.subTest(depends=depends),self.assertRaisesRegex(u.Invalid,'dependency drift'):
+                self.discover(stanza(Depends=depends))
     def test_checked_in_historical_fixtures(self):
         current=(ROOT/'tests/fixtures/Packages.current').read_text()
         newer=(ROOT/'tests/fixtures/Packages.newer').read_text()

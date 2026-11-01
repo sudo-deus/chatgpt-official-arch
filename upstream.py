@@ -56,7 +56,9 @@ def control(text):
 
 def normalize_depends(value):
     require(bool(value.strip()), 'missing Depends')
-    # Preserve clauses, alternatives, and constraints; canonicalize formatting only.
+    # Comma-separated clauses are a conjunction: their order and exact
+    # duplicates do not change requirements. Preserve alternative order and
+    # every version constraint so provider/requirement changes still need review.
     groups = []
     for group in value.split(','):
         alternatives = []
@@ -66,7 +68,7 @@ def normalize_depends(value):
             name, op, ver = match.groups()
             alternatives.append(name + (f' ({op} {ver})' if op else ''))
         groups.append(' | '.join(alternatives))
-    return ', '.join(groups)
+    return ', '.join(sorted(set(groups)))
 
 def check_depends(actual, expected):
     actual, expected = normalize_depends(actual), normalize_depends(expected)
