@@ -78,6 +78,13 @@ Sharp/libvips and optional Python helpers. Their precise namcap findings were
 reviewed against ELF dependencies and source imports before updating the policy.
 Keep these checks strict for future releases.
 
+Release `26.1027.51404` made Debian's `libglib2.0-bin` mandatory and reordered
+and deduplicated its dependency list. The existing Arch/Artix `glib2` dependency
+already supplies `gio`, `gsettings`, `gdbus`, and `glib-compile-schemas`; the
+reviewed baseline and its source checksum were updated with the release.
+New LaTeX preview and optional dictation helpers were reviewed before adding
+their exact Python findings to the namcap policy. Future drift still fails.
+
 After a GitHub username change, update the local `origin` URL and repository
 links. Workflows use `github.repository`/the event repository, so their owner is
 resolved automatically. SSH still needs an available, unlocked existing key;
